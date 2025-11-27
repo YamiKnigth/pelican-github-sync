@@ -1,1 +1,1 @@
-# github-plugin-pelican
+# pelican-github-sync

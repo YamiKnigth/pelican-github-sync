@@ -1,0 +1,24 @@
+{
+    "id": "githubsync",
+    "name": "GithubSync",
+    "author": "YamiKnigth",
+    "version": "1.0.0",
+    "description": "Sincroniza archivos del servidor con Github",
+    "category": "plugin",
+    "url": null,
+    "update_url": null,
+    "namespace": "YamiKnigth\\GithubSync",
+    "class": "GithubSyncPlugin",
+    "panels": [
+        "server"
+    ],
+    "panel_version": null,
+    "composer_packages": null,
+    "providers": [
+        "YamiKnigth\\GithubSync\\Providers\\GithubSyncProvider"
+    ],
+    "meta": {
+        "status": "enabled",
+        "status_message": null
+    }
+}
