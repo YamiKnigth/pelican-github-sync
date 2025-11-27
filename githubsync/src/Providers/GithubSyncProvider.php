@@ -32,14 +32,31 @@ class GithubSyncProvider extends ServiceProvider
                 \Filament\Support\Facades\FilamentView::registerRenderHook(
                     'panels::page.start',
                     function () {
-                        // Solo mostrar en rutas de servidor
+                        // DEBUG: Siempre mostrar algo para confirmar que el hook funciona
                         $route = request()->route();
-                        if ($route && $route->hasParameter('server')) {
-                            return \Illuminate\Support\Facades\Blade::render(
-                                '@livewire(\'yamiknigth-github-sync-toolbar\')'
-                            );
+                        $hasServer = $route && $route->hasParameter('server');
+                        $path = request()->path();
+                        
+                        // Mostrar debug básico siempre
+                        $debug = '<div style="background: #fee2e2; border: 3px solid #dc2626; padding: 15px; margin: 10px; border-radius: 8px; font-family: monospace;">';
+                        $debug .= '<strong>🚨 HOOK EJECUTADO - panels::page.start</strong><br>';
+                        $debug .= 'Ruta: ' . $path . '<br>';
+                        $debug .= 'Tiene servidor: ' . ($hasServer ? 'SÍ' : 'NO') . '<br>';
+                        $debug .= '</div>';
+                        
+                        // Intentar renderizar el widget si hay servidor
+                        if ($hasServer) {
+                            try {
+                                $widget = \Illuminate\Support\Facades\Blade::render(
+                                    '@livewire(\'yamiknigth-github-sync-toolbar\')'
+                                );
+                                return $debug . $widget;
+                            } catch (\Exception $e) {
+                                return $debug . '<div style="background: #fef3c7; padding: 10px; margin: 10px;">Error: ' . $e->getMessage() . '</div>';
+                            }
                         }
-                        return '';
+                        
+                        return $debug;
                     }
                 );
             }
