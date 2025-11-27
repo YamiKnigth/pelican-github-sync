@@ -25,11 +25,23 @@ class GithubSyncProvider extends ServiceProvider
 
         // 3. Registrar el componente Livewire
         Livewire::component('yamiknigth-github-sync-toolbar', GithubToolbarWidget::class);
-
-        // 4. Inyectar el Widget en la lista de archivos
-        Filament::registerRenderHook(
-            'server.resource.files.list.before',
-            fn (): string => Blade::render('@livewire("yamiknigth-github-sync-toolbar")')
-        );
+        
+        // 4. Registrar render hook (alternativa más directa)
+        $this->app->booted(function () {
+            if (class_exists(\Filament\Support\Facades\FilamentView::class)) {
+                \Filament\Support\Facades\FilamentView::registerRenderHook(
+                    'panels::body.start',
+                    function () {
+                        // Solo mostrar en rutas de servidor con parámetro 'server'
+                        if (request()->route() && request()->route()->hasParameter('server')) {
+                            return \Illuminate\Support\Facades\Blade::render(
+                                '@livewire(\'yamiknigth-github-sync-toolbar\')'
+                            );
+                        }
+                        return '';
+                    }
+                );
+            }
+        });
     }
 }

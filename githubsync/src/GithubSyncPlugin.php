@@ -4,6 +4,9 @@ namespace YamiKnigth\GithubSync;
 
 use Filament\Contracts\Plugin;
 use Filament\Panel;
+use Illuminate\Support\Facades\Blade;
+use Filament\Support\Facades\FilamentView;
+use YamiKnigth\GithubSync\Filament\Widgets\GithubToolbarWidget;
 
 class GithubSyncPlugin implements Plugin
 {
@@ -14,12 +17,19 @@ class GithubSyncPlugin implements Plugin
 
     public function register(Panel $panel): void
     {
-        // Allows you to use any configuration option that is available to the panel.
-        // This includes registering resources, custom pages, themes, render hooks and more.
+        // Registrar el widget en el panel
+        $panel->widgets([
+            GithubToolbarWidget::class,
+        ]);
     }
 
     public function boot(Panel $panel): void
     {
-        // Is run only when the panel that the plugin is being registered to is actually in-use. It is executed by a middleware class.
+        // Registrar render hook cuando el panel está listo
+        FilamentView::registerRenderHook(
+            'panels::body.start',
+            fn (): string => Blade::render('@livewire(\'yamiknigth-github-sync-toolbar\')'),
+            scopes: ['server']
+        );
     }
 }
