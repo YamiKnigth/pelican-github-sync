@@ -18,14 +18,13 @@ class GithubToolbarWidget extends Widget implements HasActions
     // Referencia al namespace de la vista (definido en el Provider)
     protected string $view = 'YamiKnigth-GithubSync::toolbar';
     
-    // Hacer el widget visible
-    protected bool $isLazy = false;
+    // Hacer el widget visible siempre
+    protected static bool $isLazy = false;
     
-    // Solo mostrar en páginas de servidor
+    // Sin restricciones
     public static function canView(): bool
     {
-        // Verificar que estamos en una ruta de servidor
-        return request()->route() && request()->route()->hasParameter('server');
+        return true;
     }
 
     public $server;

@@ -26,21 +26,23 @@ class GithubSyncProvider extends ServiceProvider
         // 3. Registrar el componente Livewire
         Livewire::component('yamiknigth-github-sync-toolbar', GithubToolbarWidget::class);
         
-        // 4. Registrar render hook (alternativa más directa)
+        // 4. Registrar múltiples render hooks para asegurar que se vea
         $this->app->booted(function () {
             if (class_exists(\Filament\Support\Facades\FilamentView::class)) {
-                \Filament\Support\Facades\FilamentView::registerRenderHook(
-                    'panels::body.start',
-                    function () {
-                        // Solo mostrar en rutas de servidor con parámetro 'server'
-                        if (request()->route() && request()->route()->hasParameter('server')) {
-                            return \Illuminate\Support\Facades\Blade::render(
-                                '@livewire(\'yamiknigth-github-sync-toolbar\')'
-                            );
-                        }
-                        return '';
+                $widgetHtml = function () {
+                    // Solo mostrar en rutas de servidor
+                    if (request()->route() && request()->route()->hasParameter('server')) {
+                        return \Illuminate\Support\Facades\Blade::render(
+                            '@livewire(\'yamiknigth-github-sync-toolbar\')'
+                        );
                     }
-                );
+                    return '';
+                };
+                
+                // Probar diferentes hooks
+                \Filament\Support\Facades\FilamentView::registerRenderHook('panels::body.start', $widgetHtml);
+                \Filament\Support\Facades\FilamentView::registerRenderHook('panels::content.start', $widgetHtml);
+                \Filament\Support\Facades\FilamentView::registerRenderHook('panels::page.start', $widgetHtml);
             }
         });
     }
