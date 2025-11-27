@@ -1,10 +1,9 @@
 {
     "id": "githubsync",
-    "name": "githubsync",
-    "description": "A plugin to manage GitHub repositories within Pelican Panel.",
-    "version": "1.0.0",
+    "name": "GithubSync",
     "author": "YamiKnigth",
-    "license": "MIT",
+    "version": "1.0.0",
+    "description": "Sincroniza archivos del servidor con Github",
     "category": "plugin",
     "url": null,
     "update_url": null,

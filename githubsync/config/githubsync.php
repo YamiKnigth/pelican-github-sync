@@ -1,5 +1,9 @@
 <?php
 
 return [
-    // Config values for GithubSync
+    'github' => [
+        'token' => env('GITHUB_TOKEN', ''),
+        'username' => env('GITHUB_USERNAME', ''),
+        'password' => env('GITHUB_PASSWORD', ''),
+    ],
 ];

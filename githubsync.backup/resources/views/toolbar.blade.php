@@ -35,10 +35,6 @@
                             class="px-3 py-2 text-sm font-semibold rounded-lg bg-green-600 text-white hover:bg-green-700 shadow-sm transition">
                         Push
                     </button>
-                    <button wire:click="openGithubSync" type="button"
-                            class="px-3 py-2 text-sm font-semibold rounded-lg bg-gray-800 text-white hover:bg-gray-900 shadow-sm transition">
-                        GitHub Sync
-                    </button>
                 @else
                     <span class="text-sm text-gray-500">Configura primero</span>
                 @endif
