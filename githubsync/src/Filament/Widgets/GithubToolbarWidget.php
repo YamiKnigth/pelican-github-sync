@@ -2,32 +2,34 @@
 
 namespace YamiKnigth\GithubSync\Filament\Widgets;
 
-use Filament\Widgets\Widget;
-use Filament\Actions\Concerns\InteractsWithActions;
-use Filament\Actions\Contracts\HasActions;
-use Filament\Actions\Action;
-use Filament\Forms\Components\TextInput;
+use Livewire\Component;
 use Filament\Notifications\Notification;
 use YamiKnigth\GithubSync\Models\GithubSetting;
 use YamiKnigth\GithubSync\Services\GitCommandService;
 
-class GithubToolbarWidget extends Widget implements HasActions
+class GithubToolbarWidget extends Component
 {
-    use InteractsWithActions;
-
     // Referencia al namespace de la vista (definido en el Provider)
     protected string $view = 'YamiKnigth-GithubSync::toolbar';
     
-    // Hacer el widget visible siempre
-    protected static bool $isLazy = false;
-    
-    // Sin restricciones
-    public static function canView(): bool
-    {
-        return true;
-    }
-
     public $server;
+    
+    // Propiedades del formulario de configuración
+    public $showConfigModal = false;
+    public $repo_url = '';
+    public $branch = 'main';
+    public $git_username = '';
+    public $git_email = '';
+    public $encrypted_token = '';
+    
+    // Modal de push
+    public $showPushModal = false;
+    public $commit_message = 'Update via Panel';
+
+    public function render()
+    {
+        return view($this->view);
+    }
 
     public function mount()
     {
@@ -42,9 +44,19 @@ class GithubToolbarWidget extends Widget implements HasActions
                 try {
                     $this->server = \App\Models\Server::where('uuid_short', $uuid)->first();
                 } catch (\Exception $e) {
-                    // Si falla, intentar sin filtro
                     $this->server = null;
                 }
+            }
+        }
+        
+        // Cargar configuración existente
+        if ($this->server) {
+            $settings = GithubSetting::where('server_id', $this->server->id)->first();
+            if ($settings) {
+                $this->repo_url = $settings->repo_url;
+                $this->branch = $settings->branch;
+                $this->git_username = $settings->git_username;
+                $this->git_email = $settings->git_email;
             }
         }
     }
@@ -57,60 +69,70 @@ class GithubToolbarWidget extends Widget implements HasActions
         
         return GithubSetting::where('server_id', $this->server->id)->exists();
     }
-
-    public function configureAction(): Action
+    
+    public function openConfigModal()
     {
-        return Action::make('configure')
-            ->label('')
-            ->tooltip('Configurar Git')
-            ->icon('heroicon-o-cog-6-tooth')
-            ->color('gray')
-            ->fillForm(fn () => GithubSetting::where('server_id', $this->server->id)->first()?->toArray() ?? [])
-            ->form([
-                TextInput::make('repo_url')->required()->url()->label('URL Repositorio')->placeholder('https://github.com/usuario/repo.git'),
-                TextInput::make('branch')->required()->default('main'),
-                TextInput::make('git_username')->required()->label('Usuario'),
-                TextInput::make('git_email')->required()->email()->label('Email'),
-                TextInput::make('encrypted_token')->password()->required()->label('Token (PAT)'),
-            ])
-            ->action(function (array $data) {
-                GithubSetting::updateOrCreate(['server_id' => $this->server->id], $data);
-                Notification::make()->title('Configuración guardada')->success()->send();
-            });
+        $this->showConfigModal = true;
+    }
+    
+    public function closeConfigModal()
+    {
+        $this->showConfigModal = false;
+    }
+    
+    public function saveConfiguration()
+    {
+        $this->validate([
+            'repo_url' => 'required|url',
+            'branch' => 'required',
+            'git_username' => 'required',
+            'git_email' => 'required|email',
+            'encrypted_token' => 'required',
+        ]);
+        
+        GithubSetting::updateOrCreate(
+            ['server_id' => $this->server->id],
+            [
+                'repo_url' => $this->repo_url,
+                'branch' => $this->branch,
+                'git_username' => $this->git_username,
+                'git_email' => $this->git_email,
+                'encrypted_token' => $this->encrypted_token,
+            ]
+        );
+        
+        Notification::make()->title('Configuración guardada')->success()->send();
+        $this->showConfigModal = false;
+    }
+    
+    public function gitClone()
+    {
+        $this->runGit('clone');
+    }
+    
+    public function gitPull()
+    {
+        $this->runGit('pull');
+    }
+    
+    public function openPushModal()
+    {
+        $this->showPushModal = true;
+    }
+    
+    public function gitPush()
+    {
+        $this->runGit('push', $this->commit_message);
+        $this->showPushModal = false;
     }
 
-    public function cloneAction(): Action
-    {
-        return Action::make('clone')
-            ->label('Clone')
-            ->color('danger')
-            ->requiresConfirmation()
-            ->action(fn (GitCommandService $s) => $this->runGit($s, 'clone'));
-    }
-
-    public function pullAction(): Action
-    {
-        return Action::make('pull')
-            ->label('Pull')
-            ->color('primary')
-            ->action(fn (GitCommandService $s) => $this->runGit($s, 'pull'));
-    }
-
-    public function pushAction(): Action
-    {
-        return Action::make('push')
-            ->label('Push')
-            ->color('success')
-            ->form([TextInput::make('message')->required()->default('Update via Panel')])
-            ->action(fn (array $data, GitCommandService $s) => $this->runGit($s, 'push', $data['message']));
-    }
-
-    protected function runGit(GitCommandService $service, string $action, ?string $msg = null)
+    protected function runGit(string $action, ?string $msg = null)
     {
         try {
             $settings = GithubSetting::where('server_id', $this->server->id)->firstOrFail();
+            $service = app(GitCommandService::class);
             $service->execute($settings, $action, $msg);
-            Notification::make()->title('Comando enviado a consola')->success()->send();
+            Notification::make()->title('Comando ejecutado')->success()->send();
         } catch (\Exception $e) {
             Notification::make()->title('Error')->body($e->getMessage())->danger()->send();
         }
