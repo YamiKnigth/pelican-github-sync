@@ -30,13 +30,19 @@ class GithubSyncProvider extends ServiceProvider
         $this->app->booted(function () {
             if (class_exists(\Filament\Support\Facades\FilamentView::class)) {
                 $widgetHtml = function () {
-                    // Solo mostrar en rutas de servidor
-                    if (request()->route() && request()->route()->hasParameter('server')) {
+                    // DEBUG: Mostrar siempre para verificar que funciona
+                    $route = request()->route();
+                    $hasServer = $route && $route->hasParameter('server');
+                    
+                    // Mostrar widget si hay servidor
+                    if ($hasServer) {
                         return \Illuminate\Support\Facades\Blade::render(
                             '@livewire(\'yamiknigth-github-sync-toolbar\')'
                         );
                     }
-                    return '';
+                    
+                    // DEBUG: Mostrar mensaje si no hay servidor (para saber que el hook funciona)
+                    return '<div style="background: yellow; padding: 10px; margin: 10px;">DEBUG: GithubSync hook funciona. Ruta actual: ' . request()->path() . '</div>';
                 };
                 
                 // Probar diferentes hooks
