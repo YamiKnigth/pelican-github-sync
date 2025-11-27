@@ -37,9 +37,14 @@ class GithubToolbarWidget extends Widget implements HasActions
         // Si no funciona con 'server', intentar obtenerlo por el UUID de la URL
         if (!$this->server) {
             $path = request()->path();
-            if (preg_match('/server\/([a-f0-9-]+)/', $path, $matches)) {
+            if (preg_match('/server\/([a-f0-9-]+)/', $path, $matches) && isset($matches[1])) {
                 $uuid = $matches[1];
-                $this->server = \App\Models\Server::where('uuid_short', $uuid)->first();
+                try {
+                    $this->server = \App\Models\Server::where('uuid_short', $uuid)->first();
+                } catch (\Exception $e) {
+                    // Si falla, intentar sin filtro
+                    $this->server = null;
+                }
             }
         }
     }

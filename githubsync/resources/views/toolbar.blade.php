@@ -1,11 +1,3 @@
-{{-- DEBUG: Mostrar info del servidor --}}
-<div style="background: #fef3c7; border: 2px solid #f59e0b; padding: 12px; margin: 12px 0; border-radius: 8px;">
-    <strong>🔍 DEBUG GitHub Sync:</strong><br>
-    Server: {{ $server ? 'SÍ (' . get_class($server) . ')' : 'NO' }}<br>
-    Server ID: {{ $server->id ?? 'N/A' }}<br>
-    Has Settings: {{ $this->hasSettings() ? 'SÍ' : 'NO' }}
-</div>
-
 <x-filament::section class="mb-4">
     <div class="flex items-center justify-between gap-4">
         <div class="flex items-center gap-2">
