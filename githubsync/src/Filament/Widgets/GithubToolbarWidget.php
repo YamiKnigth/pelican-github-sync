@@ -9,9 +9,6 @@ use YamiKnigth\GithubSync\Services\GitCommandService;
 
 class GithubToolbarWidget extends Component
 {
-    // Referencia al namespace de la vista (definido en el Provider)
-    protected string $view = 'YamiKnigth-GithubSync::toolbar';
-    
     public $server;
     
     // Propiedades del formulario de configuración
@@ -28,7 +25,7 @@ class GithubToolbarWidget extends Component
 
     public function render()
     {
-        return view($this->view);
+        return view('YamiKnigth-GithubSync::toolbar');
     }
 
     public function mount()
