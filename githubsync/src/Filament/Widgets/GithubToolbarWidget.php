@@ -31,8 +31,17 @@ class GithubToolbarWidget extends Widget implements HasActions
 
     public function mount()
     {
-        // Obtiene el servidor actual de la ruta
+        // Intentar obtener el servidor de diferentes maneras
         $this->server = request()->route()?->parameter('server');
+        
+        // Si no funciona con 'server', intentar obtenerlo por el UUID de la URL
+        if (!$this->server) {
+            $path = request()->path();
+            if (preg_match('/server\/([a-f0-9-]+)/', $path, $matches)) {
+                $uuid = $matches[1];
+                $this->server = \App\Models\Server::where('uuid_short', $uuid)->first();
+            }
+        }
     }
 
     public function hasSettings(): bool

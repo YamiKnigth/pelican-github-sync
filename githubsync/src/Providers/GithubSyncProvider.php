@@ -26,46 +26,35 @@ class GithubSyncProvider extends ServiceProvider
         // 3. Registrar el componente Livewire
         Livewire::component('yamiknigth-github-sync-toolbar', GithubToolbarWidget::class);
         
-        // 4. Registrar múltiples render hooks
+        // 4. Registrar render hook solo en content.start (el que aparece en la posición correcta)
         $this->app->booted(function () {
             if (class_exists(\Filament\Support\Facades\FilamentView::class)) {
-                $renderWidget = function () {
-                    // DEBUG: Siempre mostrar algo para confirmar que el hook funciona
-                    $route = request()->route();
-                    $hasServer = $route && $route->hasParameter('server');
-                    $path = request()->path();
-                    
-                    // Solo procesar si NO es una petición de Livewire
-                    if (str_contains($path, 'livewire/')) {
+                \Filament\Support\Facades\FilamentView::registerRenderHook(
+                    'panels::content.start',
+                    function () {
+                        $path = request()->path();
+                        
+                        // Solo procesar si NO es una petición de Livewire
+                        if (str_contains($path, 'livewire/')) {
+                            return '';
+                        }
+                        
+                        // Verificar si estamos en una ruta de servidor (contiene /server/)
+                        $isServerRoute = str_contains($path, 'server/');
+                        
+                        if ($isServerRoute) {
+                            try {
+                                return \Illuminate\Support\Facades\Blade::render(
+                                    '@livewire(\'yamiknigth-github-sync-toolbar\')'
+                                );
+                            } catch (\Exception $e) {
+                                return '<div style="background: #fee2e2; padding: 10px; margin: 10px; border-radius: 6px;">Error cargando GitHub Sync: ' . $e->getMessage() . '</div>';
+                            }
+                        }
+                        
                         return '';
                     }
-                    
-                    // Mostrar debug básico
-                    $debug = '<div style="background: #dcfce7; border: 3px solid #16a34a; padding: 15px; margin: 10px; border-radius: 8px; font-family: monospace;">';
-                    $debug .= '<strong>✅ GitHub Sync Widget</strong><br>';
-                    $debug .= 'Ruta: ' . $path . '<br>';
-                    $debug .= 'Tiene servidor: ' . ($hasServer ? 'SÍ' : 'NO') . '<br>';
-                    $debug .= '</div>';
-                    
-                    // Intentar renderizar el widget si hay servidor
-                    if ($hasServer) {
-                        try {
-                            $widget = \Illuminate\Support\Facades\Blade::render(
-                                '@livewire(\'yamiknigth-github-sync-toolbar\')'
-                            );
-                            return $debug . $widget;
-                        } catch (\Exception $e) {
-                            return $debug . '<div style="background: #fef3c7; padding: 10px; margin: 10px;">Error: ' . $e->getMessage() . '</div>';
-                        }
-                    }
-                    
-                    return $debug;
-                };
-                
-                // Probar múltiples hooks
-                \Filament\Support\Facades\FilamentView::registerRenderHook('panels::body.start', $renderWidget);
-                \Filament\Support\Facades\FilamentView::registerRenderHook('panels::content.start', $renderWidget);
-                \Filament\Support\Facades\FilamentView::registerRenderHook('panels::page.start', $renderWidget);
+                );
             }
         });
     }
